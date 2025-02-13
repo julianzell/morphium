@@ -1,19 +1,34 @@
 package de.caluga.test.mongo.suite;
 
-import de.caluga.morphium.*;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import org.bson.types.ObjectId;
+import org.junit.Test;
+import de.caluga.morphium.AnnotationAndReflectionHelper;
+import de.caluga.morphium.MorphiumObjectMapper;
+import de.caluga.morphium.MorphiumReference;
+import de.caluga.morphium.ObjectMapperImpl;
+import de.caluga.morphium.Utils;
 import de.caluga.morphium.annotations.Embedded;
 import de.caluga.morphium.annotations.Entity;
 import de.caluga.morphium.annotations.Id;
 import de.caluga.morphium.driver.MorphiumId;
 import de.caluga.morphium.mapping.MorphiumTypeMapper;
-import de.caluga.morphium.messaging.Msg;
 import de.caluga.morphium.replicaset.ReplicaSetConf;
-import de.caluga.test.mongo.suite.data.*;
-import org.bson.types.ObjectId;
-import org.junit.Test;
-
-import java.math.BigInteger;
-import java.util.*;
+import de.caluga.test.mongo.suite.data.CachedObject;
+import de.caluga.test.mongo.suite.data.ComplexObject;
+import de.caluga.test.mongo.suite.data.EmbeddedObject;
+import de.caluga.test.mongo.suite.data.ListContainer;
+import de.caluga.test.mongo.suite.data.MapListObject;
+import de.caluga.test.mongo.suite.data.TestEntityNameProvider;
+import de.caluga.test.mongo.suite.data.UncachedObject;
 /**
  * User: Stpehan Bösebeck
  * Date: 26.03.12
@@ -310,7 +325,9 @@ public class ObjectMapperTest extends MorphiumTestBase {
 
         morphium.store(uc);
 
-        List<Map<String, Object>> res = morphium.getDriver().find(morphium.getConfig().getDatabase(), "uncached_object_" + TestEntityNameProvider.number.get(), Utils.getMap("_id", uc.getMorphiumId()), null, null, 0, 0, 10000, null, null, null);
+        List<Map<String, Object>> res =
+                morphium.getDriver().find(morphium.getConfig().getDatabase(), "uncached_object_" + TestEntityNameProvider.number.get(),
+                        Utils.getMap("_id", uc.getMorphiumId()), null, null, null, 0, 0, 10000, null, null, null);
         assert (res.size() == 1);
     }
 

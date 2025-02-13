@@ -1,26 +1,23 @@
 package de.caluga.morphium.driver.inmem;
 
-import com.mongodb.event.ClusterListener;
-import com.mongodb.event.CommandListener;
-import com.mongodb.event.ConnectionPoolListener;
-import com.rits.cloning.Cloner;
-import de.caluga.morphium.*;
-import de.caluga.morphium.driver.*;
-import de.caluga.morphium.driver.bulk.*;
-import de.caluga.morphium.driver.mongodb.Maximums;
-import de.caluga.morphium.mapping.MorphiumTypeMapper;
-import org.bson.types.ObjectId;
-import org.json.simple.parser.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.SSLContext;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -28,6 +25,40 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import javax.net.ssl.SSLContext;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import org.bson.types.ObjectId;
+import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.mongodb.event.ClusterListener;
+import com.mongodb.event.CommandListener;
+import com.mongodb.event.ConnectionPoolListener;
+import com.rits.cloning.Cloner;
+import de.caluga.morphium.Collation;
+import de.caluga.morphium.Morphium;
+import de.caluga.morphium.MorphiumObjectMapper;
+import de.caluga.morphium.ObjectMapperImpl;
+import de.caluga.morphium.Utils;
+import de.caluga.morphium.driver.DriverTailableIterationCallback;
+import de.caluga.morphium.driver.FunctionNotSupportedException;
+import de.caluga.morphium.driver.MorphiumCursor;
+import de.caluga.morphium.driver.MorphiumDriver;
+import de.caluga.morphium.driver.MorphiumDriverException;
+import de.caluga.morphium.driver.MorphiumId;
+import de.caluga.morphium.driver.MorphiumTransactionContext;
+import de.caluga.morphium.driver.ReadPreference;
+import de.caluga.morphium.driver.WriteConcern;
+import de.caluga.morphium.driver.bulk.BulkRequest;
+import de.caluga.morphium.driver.bulk.BulkRequestContext;
+import de.caluga.morphium.driver.bulk.DeleteBulkRequest;
+import de.caluga.morphium.driver.bulk.InsertBulkRequest;
+import de.caluga.morphium.driver.bulk.UpdateBulkRequest;
+import de.caluga.morphium.driver.mongodb.Maximums;
+import de.caluga.morphium.mapping.MorphiumTypeMapper;
 
 /**
  * User: Stephan Bösebeck
@@ -694,7 +725,9 @@ public class InMemoryDriver implements MorphiumDriver {
     }
 
     @Override
-    public MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation coll, Map<String, Object> findMetaData) throws MorphiumDriverException {
+    public MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
+            Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation coll,
+            Map<String, Object> findMetaData) throws MorphiumDriverException {
         MorphiumCursor crs = new MorphiumCursor();
         crs.setBatchSize(batchSize);
         crs.setCursorId(System.currentTimeMillis());
@@ -719,7 +752,7 @@ public class InMemoryDriver implements MorphiumDriver {
         if (limit != 0 && limit < batchSize) {
             l = limit;
         }
-        List<Map<String, Object>> res = find(db, collection, query, sort, projection, skip, l, batchSize, readPreference, coll, findMetaData);
+        List<Map<String, Object>> res = find(db, collection, query, sort, null, projection, skip, l, batchSize, readPreference, coll, findMetaData);
         crs.setBatch(Collections.synchronizedList(new CopyOnWriteArrayList<>(res)));
 
         if (res.size() < batchSize) {
@@ -813,7 +846,8 @@ public class InMemoryDriver implements MorphiumDriver {
                 limit = oldCrs.getLimit() - oldCrs.getDataRead();
             }
         }
-        List<Map<String, Object>> res = find(inCrs.getDb(), inCrs.getCollection(), inCrs.getQuery(), inCrs.getSort(), inCrs.getProjection(), inCrs.getSkip(), limit, inCrs.getBatchSize(), inCrs.getReadPreference(), inCrs.getCollation(), inCrs.getFindMetaData());
+        List<Map<String, Object>> res = find(inCrs.getDb(), inCrs.getCollection(), inCrs.getQuery(), inCrs.getSort(), null, inCrs.getProjection(),
+                inCrs.getSkip(), limit, inCrs.getBatchSize(), inCrs.getReadPreference(), inCrs.getCollation(), inCrs.getFindMetaData());
         next.setBatch(Collections.synchronizedList(new CopyOnWriteArrayList<>(res)));
         if (res.size() < inCrs.getBatchSize() || (oldCrs.limit != 0 && res.size() + oldCrs.getDataRead() > oldCrs.limit)) {
             //finished!
@@ -828,7 +862,9 @@ public class InMemoryDriver implements MorphiumDriver {
     }
 
     @Override
-    public List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference rp, Collation col, Map<String, Object> findMetaData) throws MorphiumDriverException {
+    public List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
+            Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference rp, Collation col, Map<String, Object> findMetaData)
+            throws MorphiumDriverException {
         return find(db, collection, query, sort, projection, skip, limit, false);
     }
 
@@ -1221,7 +1257,7 @@ public class InMemoryDriver implements MorphiumDriver {
 
     @Override
     public Map<String, Object> delete(String db, String collection, Map<String, Object> query, boolean multiple, Collation collation, WriteConcern wc) throws MorphiumDriverException {
-        List<Map<String, Object>> toDel = find(db, collection, query, null, null, 0, multiple ? 0 : 1, 10000, null, collation, null);
+        List<Map<String, Object>> toDel = find(db, collection, query, null, null, null, 0, multiple ? 0 : 1, 10000, null, collation, null);
         for (Map<String, Object> o : toDel) {
             getCollection(db, collection).remove(o);
             notifyWatchers(db, collection, "delete", o);
@@ -1284,7 +1320,7 @@ public class InMemoryDriver implements MorphiumDriver {
 
     @Override
     public Map<String, Object> findAndOneAndDelete(String db, String col, Map<String, Object> query, Map<String, Integer> sort, Collation collation) throws MorphiumDriverException {
-        List<Map<String, Object>> r = find(db, col, query, sort, null, 0, 1, 1000, null, collation, null);
+        List<Map<String, Object>> r = find(db, col, query, sort, null, null, 0, 1, 1000, null, collation, null);
         if (r.size() == 0) {
             return null;
         }
@@ -1294,14 +1330,14 @@ public class InMemoryDriver implements MorphiumDriver {
 
     @Override
     public Map<String, Object> findAndOneAndUpdate(String db, String col, Map<String, Object> query, Map<String, Object> update, Map<String, Integer> sort, Collation collation) throws MorphiumDriverException {
-        List<Map<String, Object>> ret = find(db, col, query, sort, null, 0, 1, 1, null, collation, new ConcurrentHashMap<>());
+        List<Map<String, Object>> ret = find(db, col, query, sort, null, null, 0, 1, 1, null, collation, new ConcurrentHashMap<>());
         update(db, col, query, update, false, false, collation, null);
         return ret.get(0);
     }
 
     @Override
     public Map<String, Object> findAndOneAndReplace(String db, String col, Map<String, Object> query, Map<String, Object> replacement, Map<String, Integer> sort, Collation collation) throws MorphiumDriverException {
-        List<Map<String, Object>> ret = find(db, col, query, sort, null, 0, 1, 1, null, collation, new ConcurrentHashMap<>());
+        List<Map<String, Object>> ret = find(db, col, query, sort, null, null, 0, 1, 1, null, collation, new ConcurrentHashMap<>());
         if (ret.get(0).get("_id") != null)
             replacement.put("_id", ret.get(0).get("_id"));
         else

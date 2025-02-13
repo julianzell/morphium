@@ -4,20 +4,66 @@
  */
 package de.caluga.morphium;
 
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.mongodb.event.ClusterListener;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.ConnectionPoolListener;
 import de.caluga.morphium.aggregation.Aggregator;
-import de.caluga.morphium.annotations.*;
+import de.caluga.morphium.annotations.Capped;
+import de.caluga.morphium.annotations.CreationTime;
+import de.caluga.morphium.annotations.DefaultReadPreference;
+import de.caluga.morphium.annotations.Entity;
+import de.caluga.morphium.annotations.Id;
+import de.caluga.morphium.annotations.Index;
+import de.caluga.morphium.annotations.LastChange;
+import de.caluga.morphium.annotations.Reference;
+import de.caluga.morphium.annotations.WriteSafety;
 import de.caluga.morphium.annotations.caching.Cache;
-import de.caluga.morphium.annotations.lifecycle.*;
+import de.caluga.morphium.annotations.lifecycle.PostLoad;
+import de.caluga.morphium.annotations.lifecycle.PostRemove;
+import de.caluga.morphium.annotations.lifecycle.PostStore;
+import de.caluga.morphium.annotations.lifecycle.PostUpdate;
+import de.caluga.morphium.annotations.lifecycle.PreRemove;
+import de.caluga.morphium.annotations.lifecycle.PreStore;
+import de.caluga.morphium.annotations.lifecycle.PreUpdate;
 import de.caluga.morphium.async.AsyncOperationCallback;
 import de.caluga.morphium.bulk.MorphiumBulkContext;
 import de.caluga.morphium.cache.MorphiumCache;
 import de.caluga.morphium.cache.MorphiumCacheImpl;
 import de.caluga.morphium.changestream.ChangeStreamEvent;
 import de.caluga.morphium.changestream.ChangeStreamListener;
-import de.caluga.morphium.driver.*;
+import de.caluga.morphium.driver.DriverTailableIterationCallback;
+import de.caluga.morphium.driver.MorphiumDriver;
+import de.caluga.morphium.driver.MorphiumDriverException;
+import de.caluga.morphium.driver.MorphiumId;
+import de.caluga.morphium.driver.MorphiumTransactionContext;
+import de.caluga.morphium.driver.ReadPreference;
+import de.caluga.morphium.driver.WriteConcern;
 import de.caluga.morphium.encryption.EncryptionKeyProvider;
 import de.caluga.morphium.query.MongoField;
 import de.caluga.morphium.query.MongoFieldImpl;
@@ -31,21 +77,9 @@ import de.caluga.morphium.writer.BufferedMorphiumWriterImpl;
 import de.caluga.morphium.writer.MorphiumWriter;
 import de.caluga.morphium.writer.MorphiumWriterImpl;
 import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
 import net.sf.cglib.proxy.Enhancer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This is the single access point for accessing MongoDB. This should
@@ -1416,7 +1450,8 @@ public class Morphium implements AutoCloseable {
 
         try {
             Map<String, Object> findMetaData = new HashMap<>();
-            List<Map<String, Object>> found = morphiumDriver.find(config.getDatabase(), collection, srch, null, null, 0, 1, 1, null, null, findMetaData);
+            List<Map<String, Object>> found =
+                    morphiumDriver.find(config.getDatabase(), collection, srch, null, null, null, 0, 1, 1, null, null, findMetaData);
             if (found != null && !found.isEmpty()) {
                 Map<String, Object> dbo = found.get(0);
                 Object fromDb = objectMapper.deserialize(o.getClass(), dbo);

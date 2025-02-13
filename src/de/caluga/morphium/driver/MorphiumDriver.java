@@ -2,6 +2,9 @@ package de.caluga.morphium.driver;/**
  * Created by stephan on 15.10.15.
  */
 
+import java.util.List;
+import java.util.Map;
+import javax.net.ssl.SSLContext;
 import com.mongodb.event.ClusterListener;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.ConnectionPoolListener;
@@ -9,10 +12,6 @@ import de.caluga.morphium.Collation;
 import de.caluga.morphium.Morphium;
 import de.caluga.morphium.driver.bulk.BulkRequestContext;
 import de.caluga.morphium.driver.mongodb.Maximums;
-
-import javax.net.ssl.SSLContext;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Morphium driver interface
@@ -169,7 +168,9 @@ public interface MorphiumDriver {
 
     MorphiumCursor initAggregationIteration(String db, String collection, List<Map<String, Object>> aggregationPipeline, ReadPreference readPreference, Collation collation, int batchSize, Map<String, Object> findMetaData) throws MorphiumDriverException;
 
-    MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation coll, Map<String, Object> findMetaData) throws MorphiumDriverException;
+    MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
+            Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation coll,
+            Map<String, Object> findMetaData) throws MorphiumDriverException;
 
     void watch(String db, int maxWait, boolean fullDocumentOnUpdate, List<Map<String, Object>> pipeline, DriverTailableIterationCallback cb) throws MorphiumDriverException;
 
@@ -181,7 +182,9 @@ public interface MorphiumDriver {
 
     void closeIteration(MorphiumCursor crs) throws MorphiumDriverException;
 
-    List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation collation, final Map<String, Object> findMetaData) throws MorphiumDriverException;
+    List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
+            Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation collation,
+            final Map<String, Object> findMetaData) throws MorphiumDriverException;
 
     long count(String db, String collection, Map<String, Object> query, Collation collation, ReadPreference rp) throws MorphiumDriverException;
 

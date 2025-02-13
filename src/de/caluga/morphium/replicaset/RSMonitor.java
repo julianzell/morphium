@@ -1,14 +1,17 @@
 package de.caluga.morphium.replicaset;
 
-import de.caluga.morphium.Morphium;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import de.caluga.morphium.Morphium;
 
 /**
  * Used in a Thread or executor.
@@ -140,7 +143,8 @@ public class RSMonitor {
 
                 if (full) {
                     Map<String, Object> findMetaData = new HashMap<>();
-                    List<Map<String, Object>> stats = morphium.getDriver().find("local", "system.replset", new HashMap<>(), null, null, 0, 10, 10, null, null, findMetaData);
+                    List<Map<String, Object>> stats = morphium.getDriver().find("local", "system.replset", new HashMap<>(), null, null, null, 0, 10,
+                            10, null, null, findMetaData);
                     if (stats == null || stats.isEmpty()) {
                         logger.debug("could not get replicaset status");
                     } else {

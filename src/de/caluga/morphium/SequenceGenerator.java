@@ -1,11 +1,14 @@
 package de.caluga.morphium;
 
-import de.caluga.morphium.driver.MorphiumDriverException;
-import de.caluga.morphium.query.Query;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import de.caluga.morphium.driver.MorphiumDriverException;
+import de.caluga.morphium.query.Query;
 
 /**
  * User: Stephan Bösebeck
@@ -50,7 +53,8 @@ public class SequenceGenerator {
 
         try {
             if (!morphium.getDriver().exists(morphium.getConfig().getDatabase(), morphium.getMapper().getCollectionName(Sequence.class)) || morphium.createQueryFor(Sequence.class).f("_id").eq(name).countAll() == 0) {
-                List<Map<String, Object>> lst = morphium.getDriver().find(morphium.getConfig().getDatabase(), "sequence", Utils.getMap("name", name), null, null, 0, 1, 100, null, null, new HashMap<>());
+                List<Map<String, Object>> lst = morphium.getDriver().find(morphium.getConfig().getDatabase(), "sequence", Utils.getMap("name", name),
+                        null, null, null, 0, 1, 100, null, null, new HashMap<>());
                 if (lst.size() != 0) {
                     log.info("Migrating old sequence");
                     //migrate old

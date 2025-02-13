@@ -2,16 +2,15 @@ package de.caluga.morphium.query;/**
  * Created by stephan on 04.04.16.
  */
 
-import de.caluga.morphium.driver.MorphiumCursor;
-import de.caluga.morphium.driver.MorphiumDriverException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import de.caluga.morphium.driver.MorphiumCursor;
+import de.caluga.morphium.driver.MorphiumDriverException;
 
 
 /**
@@ -160,7 +159,9 @@ public class PrefetchingQueryIterator<T> implements MorphiumQueryIterator<T> {
             startedAlready = true;
             //startup
             try {
-                cursor = query.getMorphium().getDriver().initIteration(query.getMorphium().getConfig().getDatabase(), query.getCollectionName(), query.toQueryObject(), query.getSort(), query.getFieldListForQuery(), query.getSkip(), query.getLimit(), batchsize, query.getMorphium().getReadPreferenceForClass(query.getType()), query.getCollation(), null);
+                cursor = query.getMorphium().getDriver().initIteration(query.getMorphium().getConfig().getDatabase(), query.getCollectionName(),
+                        query.toQueryObject(), query.getSort(), query.getHintFieldName(), query.getFieldListForQuery(), query.getSkip(),
+                        query.getLimit(), batchsize, query.getMorphium().getReadPreferenceForClass(query.getType()), query.getCollation(), null);
                 if (cursor == null) {
                     return false;
                 }

@@ -395,7 +395,8 @@ public class QueryImpl<T> implements Query<T>, Cloneable {
         List<Map<String, Object>> obj;
         Map<String, Object> findMetaData = new HashMap<>();
         try {
-            obj = morphium.getDriver().find(getDB(), getCollectionName(), query, sort, lst, skip, limit, 100, getRP(), getCollation(), findMetaData);
+            obj = morphium.getDriver().find(getDB(), getCollectionName(), query, sort, null, lst, skip, limit, 100, getRP(), getCollation(),
+                    findMetaData);
         } catch (MorphiumDriverException e) {
             //TODO: Implement Handling
             throw new RuntimeException(e);
@@ -941,7 +942,8 @@ public class QueryImpl<T> implements Query<T>, Cloneable {
         try {
 
             Map<String, Object> findMetaData = new HashMap<>();
-            List<Map<String, Object>> query = morphium.getDriver().find(getDB(), getCollectionName(), toQueryObject(), sort, lst, skip, limit, morphium.getConfig().getCursorBatchSize(), getRP(), collation, findMetaData);
+            List<Map<String, Object>> query = morphium.getDriver().find(getDB(), getCollectionName(), toQueryObject(), sort, hintFieldName, lst, skip,
+                    limit, morphium.getConfig().getCursorBatchSize(), getRP(), collation, findMetaData);
             srv = (String) findMetaData.get("server");
 
 
@@ -1147,7 +1149,8 @@ public class QueryImpl<T> implements Query<T>, Cloneable {
         int lim = getLimit();
         limit(1);
         try {
-            srch = morphium.getDriver().find(getDB(), getCollectionName(), toQueryObject(), getSort(), fl, getSkip(), getLimit(), 1, getRP(), collation, findMetaData);
+            srch = morphium.getDriver().find(getDB(), getCollectionName(), toQueryObject(), getSort(), getHintFieldName(), fl, getSkip(), getLimit(),
+                    1, getRP(), collation, findMetaData);
         } catch (MorphiumDriverException e) {
             //TODO: Implement Handling
             throw new RuntimeException(e);
@@ -1233,7 +1236,8 @@ public class QueryImpl<T> implements Query<T>, Cloneable {
 
         List<Map<String, Object>> query;
         try {
-            query = morphium.getDriver().find(getDB(), getCollectionName(), toQueryObject(), sort, Utils.getMap("_id", 1), skip, limit, 1, getRP(), collation, findMetadata);
+            query = morphium.getDriver().find(getDB(), getCollectionName(), toQueryObject(), sort, hintFieldName, Utils.getMap("_id", 1), skip, limit,
+                    1, getRP(), collation, findMetadata);
         } catch (MorphiumDriverException e) {
             //TODO: Implement Handling
             throw new RuntimeException(e);
