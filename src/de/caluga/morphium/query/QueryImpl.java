@@ -1,26 +1,44 @@
 package de.caluga.morphium.query;
 
-import de.caluga.morphium.Collation;
-import de.caluga.morphium.*;
-import de.caluga.morphium.aggregation.Expr;
-import de.caluga.morphium.annotations.*;
-import de.caluga.morphium.annotations.caching.Cache;
-import de.caluga.morphium.async.AsyncOperationCallback;
-import de.caluga.morphium.async.AsyncOperationType;
-import de.caluga.morphium.driver.DriverTailableIterationCallback;
-import de.caluga.morphium.driver.MorphiumDriverException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.stream.Collectors;
+import de.caluga.morphium.AnnotationAndReflectionHelper;
+import de.caluga.morphium.Collation;
+import de.caluga.morphium.FilterExpression;
+import de.caluga.morphium.Morphium;
+import de.caluga.morphium.MorphiumAccessVetoException;
+import de.caluga.morphium.ReadAccessType;
+import de.caluga.morphium.StatisticKeys;
+import de.caluga.morphium.Utils;
+import de.caluga.morphium.aggregation.Expr;
+import de.caluga.morphium.annotations.AdditionalData;
+import de.caluga.morphium.annotations.DefaultReadPreference;
+import de.caluga.morphium.annotations.Entity;
+import de.caluga.morphium.annotations.Id;
+import de.caluga.morphium.annotations.LastAccess;
+import de.caluga.morphium.annotations.ReadPreferenceLevel;
+import de.caluga.morphium.annotations.caching.Cache;
+import de.caluga.morphium.async.AsyncOperationCallback;
+import de.caluga.morphium.async.AsyncOperationType;
+import de.caluga.morphium.driver.DriverTailableIterationCallback;
+import de.caluga.morphium.driver.MorphiumDriverException;
 
 /**
  * User: Stpehan Bösebeck
@@ -44,6 +62,7 @@ public class QueryImpl<T> implements Query<T>, Cloneable {
     private ThreadPoolExecutor executor;
     private String collectionName;
     private String srv = null;
+    private String hintFieldName;
 
     private Map<String, Object> fieldList;
 
@@ -494,6 +513,11 @@ public class QueryImpl<T> implements Query<T>, Cloneable {
     }
 
     @Override
+    public String getHintFieldName() {
+        return hintFieldName;
+    }
+
+    @Override
     public Query<T> addChild(FilterExpression ex) {
         andExpr.add(ex);
         return this;
@@ -664,6 +688,12 @@ public class QueryImpl<T> implements Query<T>, Cloneable {
             m.put(fld, 1);
         }
         return sort(m);
+    }
+
+    @Override
+    public Query<T> hint(String hintFieldName) {
+        this.hintFieldName = hintFieldName;
+        return this;
     }
 
     @Override

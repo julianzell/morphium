@@ -1,5 +1,9 @@
 package de.caluga.morphium.query;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
+import org.json.simple.parser.ParseException;
 import de.caluga.morphium.AnnotationAndReflectionHelper;
 import de.caluga.morphium.Collation;
 import de.caluga.morphium.FilterExpression;
@@ -7,11 +11,6 @@ import de.caluga.morphium.Morphium;
 import de.caluga.morphium.aggregation.Expr;
 import de.caluga.morphium.annotations.ReadPreferenceLevel;
 import de.caluga.morphium.async.AsyncOperationCallback;
-import org.json.simple.parser.ParseException;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * User: Stpehan Bösebeck
@@ -134,6 +133,11 @@ public interface Query<T> extends Cloneable {
     Query<T> sort(String... prefixedString);
 
     Query<T> sort(Enum... naturalOrder);
+
+    /**
+     * set an index to be hinted to
+     */
+    Query<T> hint(String hintFieldName);
 
     /**
      * count all results in query - does not take limit or skip into account
@@ -289,6 +293,8 @@ public interface Query<T> extends Cloneable {
     int getSkip();
 
     Map<String, Integer> getSort();
+
+    String getHintFieldName();
 
     @SuppressWarnings("RedundantThrows")
     Query<T> clone() throws CloneNotSupportedException;
