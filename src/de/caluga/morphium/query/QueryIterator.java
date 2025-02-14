@@ -147,7 +147,7 @@ public class QueryIterator<T> implements MorphiumQueryIterator<T> {
             try {
                 //noinspection unchecked
                 currentBatch = query.getMorphium().getDriver().initIteration(query.getMorphium().getConfig().getDatabase(), query.getCollectionName(),
-                        query.toQueryObject(), query.getSort(), query.getHintFieldName(), query.getFieldListForQuery(), query.getSkip(),
+                        query.toQueryObject(), query.getSort(), query.getHint(), query.getFieldListForQuery(), query.getSkip(),
                         query.getLimit(), getWindowSize(), query.getMorphium().getReadPreferenceForClass(query.getType()), getQuery().getCollation(),
                         null);
             } catch (MorphiumDriverException e) {
@@ -169,7 +169,7 @@ public class QueryIterator<T> implements MorphiumQueryIterator<T> {
             if (currentBatch == null && cursorExternal == 0) {
                 //noinspection unchecked
                 currentBatch = query.getMorphium().getDriver().initIteration(query.getMorphium().getConfig().getDatabase(), query.getCollectionName(),
-                        query.toQueryObject(), query.getSort(), query.getHintFieldName(), query.getFieldListForQuery(), query.getSkip(),
+                        query.toQueryObject(), query.getSort(), query.getHint(), query.getFieldListForQuery(), query.getSkip(),
                         query.getLimit(), getWindowSize(), query.getMorphium().getReadPreferenceForClass(query.getType()), query.getCollation(),
                         null);
                 cursor = 0;

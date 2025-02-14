@@ -887,7 +887,7 @@ public class MongoDriver implements MorphiumDriver {
     }
 
     @Override
-    public MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
+    public MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, Map<String, Integer> hint,
             Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation collation,
             final Map<String, Object> findMetaData) throws MorphiumDriverException {
         DriverHelper.replaceMorphiumIdByObjectId(query);
@@ -904,6 +904,9 @@ public class MongoDriver implements MorphiumDriver {
             }
             if (sort != null && !sort.isEmpty()) {
                 it.sort(new BasicDBObject(sort));
+            }
+            if (hint != null && !hint.isEmpty()) {
+                it.hint(new BasicDBObject(hint));
             }
             if (skip != 0) {
                 it.skip(skip);
@@ -1153,9 +1156,9 @@ public class MongoDriver implements MorphiumDriver {
     }
 
     @Override
-    public List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
-            Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation collation,
-            final Map<String, Object> findMetaData) throws MorphiumDriverException {
+    public List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort,
+            Map<String, Integer> hint, Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference,
+            Collation collation, final Map<String, Object> findMetaData) throws MorphiumDriverException {
         DriverHelper.replaceMorphiumIdByObjectId(query);
         //noinspection unused
         return DriverHelper.doCall(() -> {
@@ -1170,8 +1173,8 @@ public class MongoDriver implements MorphiumDriver {
             if (sort != null) {
                 it.sort(new BasicDBObject(sort));
             }
-            if (hintFieldName != null) {
-                it.hint(new BasicDBObject(hintFieldName, 1));
+            if (hint != null && !hint.isEmpty()) {
+                it.hint(new BasicDBObject(hint));
             }
             if (skip != 0) {
                 it.skip(skip);

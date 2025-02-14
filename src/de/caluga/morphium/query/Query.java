@@ -137,7 +137,7 @@ public interface Query<T> extends Cloneable {
     /**
      * set an index to be hinted to
      */
-    Query<T> hint(String hintFieldName);
+    Query<T> hint(Map<String, Integer> hint);
 
     /**
      * count all results in query - does not take limit or skip into account
@@ -294,7 +294,7 @@ public interface Query<T> extends Cloneable {
 
     Map<String, Integer> getSort();
 
-    String getHintFieldName();
+    Map<String, Integer> getHint();
 
     @SuppressWarnings("RedundantThrows")
     Query<T> clone() throws CloneNotSupportedException;

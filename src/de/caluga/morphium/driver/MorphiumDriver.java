@@ -168,7 +168,7 @@ public interface MorphiumDriver {
 
     MorphiumCursor initAggregationIteration(String db, String collection, List<Map<String, Object>> aggregationPipeline, ReadPreference readPreference, Collation collation, int batchSize, Map<String, Object> findMetaData) throws MorphiumDriverException;
 
-    MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
+    MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, Map<String, Integer> hint,
             Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation coll,
             Map<String, Object> findMetaData) throws MorphiumDriverException;
 
@@ -182,7 +182,7 @@ public interface MorphiumDriver {
 
     void closeIteration(MorphiumCursor crs) throws MorphiumDriverException;
 
-    List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
+    List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, Map<String, Integer> hint,
             Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation collation,
             final Map<String, Object> findMetaData) throws MorphiumDriverException;
 

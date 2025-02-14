@@ -160,7 +160,7 @@ public class PrefetchingQueryIterator<T> implements MorphiumQueryIterator<T> {
             //startup
             try {
                 cursor = query.getMorphium().getDriver().initIteration(query.getMorphium().getConfig().getDatabase(), query.getCollectionName(),
-                        query.toQueryObject(), query.getSort(), query.getHintFieldName(), query.getFieldListForQuery(), query.getSkip(),
+                        query.toQueryObject(), query.getSort(), query.getHint(), query.getFieldListForQuery(), query.getSkip(),
                         query.getLimit(), batchsize, query.getMorphium().getReadPreferenceForClass(query.getType()), query.getCollation(), null);
                 if (cursor == null) {
                     return false;

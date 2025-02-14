@@ -725,7 +725,7 @@ public class InMemoryDriver implements MorphiumDriver {
     }
 
     @Override
-    public MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
+    public MorphiumCursor initIteration(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, Map<String, Integer> hint,
             Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference readPreference, Collation coll,
             Map<String, Object> findMetaData) throws MorphiumDriverException {
         MorphiumCursor crs = new MorphiumCursor();
@@ -862,9 +862,9 @@ public class InMemoryDriver implements MorphiumDriver {
     }
 
     @Override
-    public List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort, String hintFieldName,
-            Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference rp, Collation col, Map<String, Object> findMetaData)
-            throws MorphiumDriverException {
+    public List<Map<String, Object>> find(String db, String collection, Map<String, Object> query, Map<String, Integer> sort,
+            Map<String, Integer> hint, Map<String, Object> projection, int skip, int limit, int batchSize, ReadPreference rp, Collation col,
+            Map<String, Object> findMetaData) throws MorphiumDriverException {
         return find(db, collection, query, sort, projection, skip, limit, false);
     }
 
